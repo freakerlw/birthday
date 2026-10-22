@@ -98,166 +98,207 @@
     host.appendChild(inner);
   })();
 
-  /* ---------- 2. gallery：每组照片一条胶片横滑带 ---------- */
-  function buildFilm(group, groupIndex) {
-    var photos = Array.isArray(group.photos) ? group.photos : [];
-    var film = el("div", "film");
-    film.tabIndex = 0;
-    film.setAttribute("role", "group");
-    film.setAttribute("aria-label", (group.title ? group.title + "，" : "") + "照片，可左右滑动或按左右方向键浏览");
+/* ---------- 2. gallery：一条 36 张、按时间排到底的横滑带 ----------
+ * 焦点判定是全站唯一一处几何规则：边缘优先（最左 = 第 1 张，最右 = 最后一张），
+ * 其余取离容器中心最近的那张。图注、计数器、.is-focus 都读这一个函数。 */
+function activeItem(film) {
+  var items = film.children;
+  var total = items.length;
+  if (!total) return null;
 
-    photos.forEach(function (photo, index) {
-      if (!photo || !photo.src) return;
-      var figure = el("figure", "film-item");
-      if (photo.ratio) figure.style.setProperty("--ratio", photo.ratio);
-      if (photo.caption) figure.setAttribute("data-caption", photo.caption);
+  var max = film.scrollWidth - film.clientWidth;
+  if (film.scrollLeft <= 2) return items[0];               /* 最左端认第 1 张 */
+  if (max - film.scrollLeft <= 2) return items[total - 1]; /* 最右端认最后一张 */
 
-      var img = document.createElement("img");
-      img.src = photo.src;
-      img.alt = photo.alt || "";
-      img.loading = index === 0 ? "eager" : "lazy";
-      img.decoding = "async";
-      if (index === 0 && groupIndex === 0) img.setAttribute("fetchpriority", "high");
-      figure.appendChild(img);
-      film.appendChild(figure);
+  var fr = film.getBoundingClientRect();
+  var cx = fr.left + fr.width / 2;
+  var best = items[0];
+  var bestD = Infinity;
+  for (var i = 0; i < total; i++) {
+    var ir = items[i].getBoundingClientRect();
+    var d = Math.abs(ir.left + ir.width / 2 - cx);
+    if (d < bestD) { bestD = d; best = items[i]; }
+  }
+  return best;
+}
+window.__filmActive = activeItem;
+
+function buildFilm(photos) {
+  var film = el("div", "film");
+  film.tabIndex = 0;
+  film.setAttribute("role", "group");
+  film.setAttribute("aria-label", "照片墙，可左右滑动或按左右方向键浏览");
+
+  photos.forEach(function (photo, index) {
+    if (!photo || !photo.src) return;
+    var figure = el("figure", "film-item");
+    if (photo.ratio) figure.style.setProperty("--ratio", photo.ratio);
+    if (photo.caption) figure.setAttribute("data-caption", photo.caption);
+
+    var img = document.createElement("img");
+    img.src = photo.src;
+    img.alt = photo.alt || "";
+    img.loading = index === 0 ? "eager" : "lazy";
+    img.decoding = "async";
+    if (index === 0) img.setAttribute("fetchpriority", "high");
+    figure.appendChild(img);
+    film.appendChild(figure);
+  });
+
+  return film;
+}
+
+/* 图注行：图注在左、计数器在右，同一行两端对齐；整条带一句图注都没有时整行不渲染。
+   aria-live 让切换被读屏播报；文案是地点 / 时刻短语，与图片 alt 的画面描述不重复。 */
+function buildCaption(film) {
+  var total = film.children.length;
+  var first = "";
+  for (var i = 0; i < total; i++) {
+    var text = film.children[i].getAttribute("data-caption");
+    if (text) { first = text; break; }
+  }
+  if (!first) return null;
+
+  var cap = el("p", "film-caption");
+  cap.setAttribute("aria-live", "polite");
+  cap.setAttribute("aria-atomic", "true");
+  var span = el("span", "film-caption-text", first);
+  var counter = el("span", "film-counter", "01 / " + twoDigits(total));
+  cap.appendChild(span);
+  cap.appendChild(counter);
+  film.__cap = cap;
+  film.__capText = span;
+  film.__counter = counter;
+  span.__shown = first;
+  return cap;
+}
+
+/* 200ms 淡出 + 淡入；折减动效时直接换字 */
+function showCaption(film, text) {
+  var span = film.__capText;
+  if (!span || span.__shown === text) return;
+  span.__shown = text;
+  film.__cap.hidden = !text; /* 空 caption 不留空行 */
+  if (reduceMotion) {
+    span.textContent = text;
+    span.style.opacity = "1";
+    return;
+  }
+  window.clearTimeout(film.__capTimer);
+  span.style.transition = "opacity 80ms linear";
+  span.style.opacity = "0";
+  film.__capTimer = window.setTimeout(function () {
+    span.textContent = text;
+    span.style.transition = "opacity 120ms linear";
+    span.style.opacity = "1";
+  }, 80);
+}
+
+/* 图注 + 计数器：都跟着 activeItem 走 */
+function paintCaption(film, item) {
+  if (!film.__capText) return;
+  var index = item ? Array.prototype.indexOf.call(film.children, item) : -1;
+  if (index < 0) index = 0;
+  showCaption(film, item ? item.getAttribute("data-caption") || "" : "");
+  if (film.__counter) {
+    film.__counter.textContent = twoDigits(index + 1) + " / " + twoDigits(film.children.length);
+  }
+}
+
+/* 带子上方的极淡进度条：宽度 = 已滑比例。它是指示器，不是动画，折减动效下照常显示 */
+function paintProgress(film) {
+  var bar = film.__bar;
+  if (!bar) return;
+  var max = film.scrollWidth - film.clientWidth;
+  var ratio = max > 1 ? film.scrollLeft / max : 0;
+  if (ratio < 0) ratio = 0;
+  if (ratio > 1) ratio = 1;
+  bar.style.width = (ratio * 100).toFixed(2) + "%";
+}
+
+function syncFilm(film) {
+  paintCaption(film, activeItem(film));
+  paintProgress(film);
+}
+
+(function buildGallery() {
+  var gallery = CONTENT.gallery;
+  var photos = gallery && Array.isArray(gallery.photos) ? gallery.photos : [];
+  if (!photos.length) return;
+
+  var nodes = [sectionTitle(LABELS.gallery)];
+  if (LABELS.gallerySub) nodes.push(el("p", "section-sub", LABELS.gallerySub));
+
+  var film = buildFilm(photos);
+  var track = el("div", "film-progress");
+  track.setAttribute("aria-hidden", "true");
+  var bar = el("span", "film-progress-bar");
+  track.appendChild(bar);
+  film.__bar = bar;
+
+  var caption = buildCaption(film);
+  var band = el("div", "gallery-band");
+  band.appendChild(track);
+  band.appendChild(film);
+  if (caption) band.appendChild(caption);
+  nodes.push(reveal(band));
+
+  mount("gallery", nodes);
+
+  /* 横向滑动只改进度条宽度；排进全站唯一的 rAF，不在 scroll 里做几何计算 */
+  var queued = false;
+  function request() {
+    if (queued) return;
+    queued = true;
+    window.__frame(function () { queued = false; paintProgress(film); });
+  }
+  film.addEventListener("scroll", request, { passive: true });
+  window.addEventListener("resize", request);
+  window.addEventListener("load", request);
+  paintProgress(film);
+
+  /* anim.js 每次重算 .is-focus 后回调这里，图注 / 计数器与焦点同一帧到位 */
+  window.__filmCaption = function (target, item) {
+    paintCaption(target, item || activeItem(target));
+  };
+})();
+
+/* ---------- 2b. 图注 / 计数器 / 进度条：anim.js 缺席或折减动效时的同一套兜底 ---------- */
+(function setupFilmFallback() {
+  var films = Array.prototype.slice.call(document.querySelectorAll(".film"));
+  if (!films.length) return;
+
+  function refresh() {
+    for (var i = 0; i < films.length; i++) syncFilm(films[i]);
+  }
+
+  function attach() {
+    var queued = false;
+    function request() {
+      if (queued) return;
+      queued = true;
+      window.__frame(function () { queued = false; refresh(); });
+    }
+    films.forEach(function (film) {
+      if (film.__capText) film.addEventListener("scroll", request, { passive: true });
     });
-
-    return film;
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request);
+    window.addEventListener("load", request);
+    refresh();
+    window.setTimeout(refresh, 300);
   }
 
-  /* 图注行：只在该带至少一张照片有 caption 时创建，不占空位。
-     aria-live 让切换被读屏播报；文案本身是地点 / 时刻短语，与图片 alt 的画面描述不重复。 */
-  function buildCaption(film) {
-    var items = film.children;
-    var first = "";
-    for (var i = 0; i < items.length; i++) {
-      var text = items[i].getAttribute("data-caption");
-      if (text) { first = text; break; }
-    }
-    if (!first) return null;
-
-    var cap = el("p", "film-caption");
-    cap.setAttribute("aria-live", "polite");
-    cap.setAttribute("aria-atomic", "true");
-    var span = el("span", "film-caption-text", first);
-    cap.appendChild(span);
-    film.__cap = cap;
-    film.__capText = span;
-    span.__shown = first;
-    return cap;
+  /* 正常动效下 anim.js 每一帧回算焦点，这里只在折减动效 / 找不到焦点时接管 */
+  if (reduceMotion) {
+    attach();
+  } else {
+    window.setTimeout(function () {
+      if (!document.querySelector(".film-item.is-focus")) attach();
+    }, 500);
   }
+})();
 
-  /* 200ms 淡出 + 淡入；折减动效时直接换字 */
-  function showCaption(film, text) {
-    var span = film.__capText;
-    if (!span || span.__shown === text) return;
-    span.__shown = text;
-    film.__cap.hidden = !text; /* 空 caption 不留空行 */
-    if (reduceMotion) {
-      span.textContent = text;
-      span.style.opacity = "1";
-      return;
-    }
-    window.clearTimeout(film.__capTimer);
-    span.style.transition = "opacity 80ms linear";
-    span.style.opacity = "0";
-    film.__capTimer = window.setTimeout(function () {
-      span.textContent = text;
-      span.style.transition = "opacity 120ms linear";
-      span.style.opacity = "1";
-    }, 80);
-  }
-
-  (function buildGallery() {
-    var groups = Array.isArray(CONTENT.galleryGroups) ? CONTENT.galleryGroups : [];
-    if (!groups.length) return;
-
-    var nodes = [sectionTitle(LABELS.gallery)];
-
-    groups.forEach(function (group, groupIndex) {
-      if (!group) return;
-      var block = el("div", "gallery-group");
-
-      var head = el("div", "group-head");
-      if (group.title) head.appendChild(el("h3", "group-title", group.title));
-      var count = el("span", "group-count", twoDigits(groupIndex + 1));
-      count.setAttribute("aria-hidden", "true");
-      head.appendChild(count);
-      block.appendChild(head);
-
-      var film = buildFilm(group, groupIndex);
-      block.appendChild(film);
-      var caption = buildCaption(film);
-      if (caption) block.appendChild(caption);
-      nodes.push(reveal(block));
-    });
-
-    mount("gallery", nodes);
-  })();
-
-  /* ---------- 2b. 图注跟随：中心最近的那张（与 anim.js 的 .is-focus 判定同一套规则） ---------- */
-  (function setupCaptions() {
-    var films = Array.prototype.slice.call(document.querySelectorAll(".film"));
-    if (!films.length) return;
-
-    function nearest(film) {
-      var items = film.children;
-      if (!items.length) return null;
-      var fr = film.getBoundingClientRect();
-      var cx = fr.left + fr.width / 2;
-      var best = null;
-      var bestD = Infinity;
-      for (var i = 0; i < items.length; i++) {
-        var ir = items[i].getBoundingClientRect();
-        var d = Math.abs(ir.left + ir.width / 2 - cx);
-        if (d < bestD) { bestD = d; best = items[i]; }
-      }
-      return best;
-    }
-
-    function update(film, item) {
-      if (!film.__capText) return;
-      showCaption(film, item ? item.getAttribute("data-caption") || "" : "");
-    }
-
-    /* anim.js 每次重算 .is-focus 后回调这里，不重复做几何计算 */
-    window.__filmCaption = update;
-
-    function refresh() {
-      for (var i = 0; i < films.length; i++) {
-        var film = films[i];
-        if (!film.__capText) continue;
-        update(film, film.querySelector(".film-item.is-focus") || nearest(film));
-      }
-    }
-
-    /* 正常动效下，anim.js 每次重算 .is-focus 就回调 __filmCaption，图注与焦点同一帧到位；
-       这里只在折减动效 / anim.js 缺席时接管，避免两处各算一遍几何。 */
-    function attachFallback() {
-      var queued = false;
-      function request() {
-        if (queued) return;
-        queued = true;
-        window.__frame(function () { queued = false; refresh(); });
-      }
-      films.forEach(function (film) {
-        if (film.__capText) film.addEventListener("scroll", request, { passive: true });
-      });
-      window.addEventListener("scroll", request, { passive: true });
-      window.addEventListener("resize", request);
-      window.addEventListener("load", request);
-      request();
-      window.setTimeout(request, 300);
-    }
-
-    if (reduceMotion) {
-      attachFallback();
-    } else {
-      window.setTimeout(function () {
-        if (!document.querySelector(".film-item.is-focus")) attachFallback();
-      }, 500);
-    }
-  })();
 
   /* ---------- 胶片带的交互：键盘 + 桌面鼠标拖动 ---------- */
   (function setupFilms() {

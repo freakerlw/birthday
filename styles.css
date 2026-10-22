@@ -224,37 +224,35 @@ ul, ol { padding: 0; list-style: none; }
   }
 }
 
-/* ---------- 2. gallery：胶片横滑带 ---------- */
-.gallery-group + .gallery-group { margin-top: clamp(48px, 7vw, 88px); }
+/* ---------- 2. gallery：一条 36 张的时间线横滑带 ---------- */
+#gallery .section-title { margin-bottom: 0; }
 
-.group-head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-.group-title {
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: clamp(15px, 1.6vw, 17px);
-  line-height: 1.6;
-  letter-spacing: 0.02em;
-  color: var(--text);
-  white-space: nowrap;
-}
-.group-head::after {
-  content: "";
-  flex: 1 1 auto;
-  height: 1px;
-  background: var(--line);
-}
-.group-count {
-  flex: 0 0 auto;
+.section-sub {
+  margin: 16px 0 clamp(22px, 3vw, 32px);
   font-family: var(--sans);
-  font-size: 11px;
-  letter-spacing: 0.28em;
-  color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+/* 带子正上方的极淡进度条：3px、--line 底、--gold 前景，宽度 = 已滑比例。
+   它是指示器不是动画，reduced-motion 下照常显示（折减块里把 transition 归零，宽度照改） */
+.film-progress {
+  height: 3px;
+  margin-bottom: 12px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.film-progress-bar {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--gold);
+  opacity: 0.8;
+  transition: width 140ms linear;
 }
 
 .film {
@@ -318,25 +316,33 @@ ul, ol { padding: 0; list-style: none; }
   user-select: none;
 }
 
-/* 胶片带下方的图注：单行、居中、超长省略；无 caption 时整行不渲染 */
+/* 图注行：图注居左、计数器居右，同一行两端对齐；宽度 = 内容区宽度，375 下不换行不溢出 */
 .film-caption {
-  margin: 8px auto 0;
-  max-width: 100%;
-  text-align: center;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin: 10px 0 0;
   font-family: var(--sans);
   font-size: 12.5px;
   line-height: 1.6;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+}
+.film-caption-text {
+  flex: 1 1 auto;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.film-caption-text {
-  display: block;
+.film-counter {
+  flex: 0 0 auto;
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ---------- 3. timeline ---------- */

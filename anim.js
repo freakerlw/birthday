@@ -244,19 +244,22 @@
     if (scrollDirty) {
       scrollDirty = false;
 
-      /* ③ 胶片带焦点：最靠近容器中心的条目 */
+      /* ③ 胶片带焦点：边缘优先（最左 = 第 1 张，最右 = 最后一张），其余离容器中心最近。
+         判定规则只有 main.js 的 activeItem 一处，图注 / 计数器读的是同一张。 */
       for (i = 0; i < films.length; i++) {
         var film = films[i];
         var items = film.children;
         if (!items.length) continue;
-        var fr = film.getBoundingClientRect();
-        var cx = fr.left + fr.width / 2;
-        var best = null;
-        var bestD = Infinity;
-        for (var j = 0; j < items.length; j++) {
-          var ir = items[j].getBoundingClientRect();
-          var d = Math.abs(ir.left + ir.width / 2 - cx);
-          if (d < bestD) { bestD = d; best = items[j]; }
+        var best = window.__filmActive ? window.__filmActive(film) : null;
+        if (!best) {
+          var fr = film.getBoundingClientRect();
+          var cx = fr.left + fr.width / 2;
+          var bestD = Infinity;
+          for (var j = 0; j < items.length; j++) {
+            var ir = items[j].getBoundingClientRect();
+            var d = Math.abs(ir.left + ir.width / 2 - cx);
+            if (d < bestD) { bestD = d; best = items[j]; }
+          }
         }
         if (best !== film.__focus) {
           if (film.__focus) film.__focus.classList.remove("is-focus");
