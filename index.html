@@ -1,37 +1,19 @@
 <!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0B0A09">
-  <title>Happy Birthday</title>
-  <!-- 渐进增强开关：只有 JS 可用时才挂 .js（以及非折减时的开场类），无 JS 时 hero 直接完整可见 -->
-  <script>document.documentElement.classList.add("js");if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("is-opening");</script>
-  <!-- 内联 favicon：不产生任何外部请求，也不会在本地服务下 404 -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230B0A09'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23C8A96A'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
-</head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#eaf3fc"><meta name="robots" content="noindex,nofollow"><title>王馨渝 · 生日快乐</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E💌%3C/text%3E%3C/svg%3E"><link rel="stylesheet" href="styles.css?v=20261023-scratch"></head>
 <body>
-  <main id="site">
-    <section id="hero" class="section section--hero" aria-labelledby="hero-name">
-      <div class="hero-glow hero-glow--a" aria-hidden="true"></div>
-      <div class="hero-glow hero-glow--b" aria-hidden="true"></div>
-    </section>
-
-    <section id="gallery" class="section section--gallery"></section>
-    <section id="timeline" class="section section--timeline"></section>
-    <section id="letter" class="section section--letter"></section>
-    <section id="wishes" class="section section--wishes"></section>
-    <section id="surprise" class="section section--surprise"></section>
-  </main>
-
-  <footer id="footer" class="section section--footer"></footer>
-
-  <!-- 内容先于逻辑加载：都是普通脚本，file:// 下可直接运行 -->
-  <script src="content.js"></script>
-  <script src="main.js"></script>
-  <script src="anim.js"></script>
-  <script src="webgl-bg.js"></script>
-</body>
-</html>
+<div class="cloud cloud-one" aria-hidden="true"></div><div class="cloud cloud-two" aria-hidden="true"></div>
+<header><a href="#home" class="wordmark">a little love note <span>♡</span></a><span class="edition">FOR XINYU · 09 / 14</span><button id="lock" class="quiet">打开生日卡 ↗</button></header>
+<main>
+<section id="home" class="hero"><div class="hero-copy"><p class="eyebrow">✦ A BIRTHDAY MADE JUST FOR YOU ✦</p><p class="script">Happy Birthday,</p><h1>王馨渝<span>今天的偏爱，都给你。</span></h1><div class="date-pill">🎂 &nbsp; 9 月 14 日 &nbsp; ♡</div><p class="intro">把我们的日子，装进一份小小的惊喜。<br>每一个被留住的瞬间，和往后每一天的喜欢。</p><a class="primary" href="#camera">拆开这份小美好 <span>↓</span></a><p class="tiny">写给我的妻子，也写给我最爱的人</p></div><figure class="hero-photo left"><img src="assets/photos/flower-wreath-v-sign.jpg" alt="我俩的第一张合照"><figcaption>our story begins ♡</figcaption></figure><figure class="hero-photo right"><img src="assets/photos/salt-lake-selfie.jpg" alt="我们戴着墨镜在翡翠湖的合照"><figcaption>my favorite person</figcaption></figure><span class="doodle star" aria-hidden="true">✧</span><span class="doodle heart" aria-hidden="true">♡</span><div class="hero-bottom"><span>A LITTLE SURPRISE, A LOT OF LOVE</span><span>SCROLL TO UNWRAP ↓</span></div></section>
+<section id="camera" class="section"><p class="eyebrow">01 / CAPTURED MOMENTS</p><h2>按一下，掉出一段回忆</h2><p class="sub">有些瞬间，想和你再看一遍。</p><div class="camera-stage"><div class="orbit" aria-hidden="true"></div><button id="shutter" class="camera" aria-label="拍立得：抽取下一张回忆"><span class="camera-top"></span><span class="camera-flash"></span><span class="camera-lens"></span><span class="camera-brand">OUR LITTLE DAYS</span><span class="camera-slot"></span></button><figure id="print" class="print" hidden><button id="print-zoom" class="print-zoom" aria-label="放大这张回忆照片"><img id="print-image" alt=""><span class="zoom-hint">✧ 点击，放大这一刻</span></button><figcaption id="print-caption"></figcaption></figure></div><p id="camera-status" class="sub" aria-live="polite">轻点相机 · 36 张回忆，慢慢翻看</p></section>
+<section id="ritual" class="section ritual"><p class="eyebrow">02 / A SWEET LITTLE RITUAL</p><h2>先许愿，再吃蛋糕</h2><p class="sub">闭上眼睛，想一件让你开心的事。</p><div class="cake-wrap"><button id="candle" aria-label="吹灭蜡烛" class="candle"><span class="flame"></span><span class="wick"></span><span class="wax"></span></button><button id="cake" aria-label="切开生日蛋糕" class="cake"><span class="icing"></span><span class="cake-note">for you ♡</span><span class="slice"></span></button><div class="plate"></div></div><p id="ritual-status" class="sub" aria-live="polite">轻点烛火许愿，再点击或划过蛋糕切一块 🍰</p><div id="wish-note" class="wish-note" hidden>愿你的每个愿望，都有人认真放在心上。♡</div></section>
+<section id="memories" class="section gallery"><div class="section-heading"><div><p class="eyebrow">03 / US, IN PICTURES</p><h2>和你一起，普通日子也闪光</h2></div><span class="handwritten">little moments, big love ↘</span></div><p class="sub">从第一张合照开始，一直到现在。左右滑动，慢慢重温。</p><nav id="chapters" class="chapters" aria-label="照片章节"></nav><div id="film" class="film" tabindex="0" aria-label="36 张回忆照片，可用左右方向键切换"></div><div class="gallery-controls"><p id="caption" aria-live="polite"></p><div><button id="prev" aria-label="上一张照片">←</button><span id="counter">01 / 36</span><button id="next" aria-label="下一张照片">→</button></div></div><div id="timeline" class="timeline"></div></section>
+<section id="letter" class="section letter-section"><p class="eyebrow">04 / FROM MY HEART</p><h2>有些话，想慢慢说给你听</h2><article class="letter"><div class="letter-top"><span>TO MY DEAREST XINYU</span><span class="stamp">♡<small>WITH LOVE</small></span></div><h3>亲爱的老婆：</h3><div id="letter-body"></div><div class="signature">永远爱你的 蜡笔小炜 <span>♡</span></div></article></section>
+<section id="wishes" class="section"><p class="eyebrow">05 / OUR NEXT CHAPTER</p><h2>往后的日子，还要和你</h2><p class="sub">点开每一张小卡片，把期待一件件留下。</p><div id="wish-grid" class="wish-grid"></div></section>
+<section class="ending section"><span class="ending-heart">♡</span><p class="eyebrow">ALWAYS, AND IN ALL WAYS</p><h2>生日快乐,我的老婆大人~</h2><p>愿你岁岁年年，所盼皆如愿；<br>愿我朝朝暮暮，常伴你身边。</p><button id="celebrate" class="primary">扫码收下，我的小小心意。</button><p id="celebrate-status" class="tiny" aria-live="polite"></p><a href="#home" class="back-top">回到故事开头 ↑</a></section>
+</main><footer>MADE WITH LOVE, JUST FOR YOU <span>王馨渝 · 9 月 14 日</span></footer><p class="music-credit">音乐：<a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100224" target="_blank" rel="noopener">Friday Morning — Kevin MacLeod (incompetech.com)</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · 原曲未修改</p>
+<dialog id="gate"><button id="close-gate" class="close" aria-label="关闭生日卡">×</button><div class="birthday-sticker">HAPPY<br><span>BIRTHDAY</span></div><p class="eyebrow">A LITTLE SURPRISE AWAITS</p><h2>For 王馨渝</h2><p class="sub">输入四位小暗号，打开这份偏爱</p><p class="hint">🔑 我们第一次见面的日子</p><div id="dots" class="dots" aria-label="已输入 0 位">○ ○ ○ ○</div><div id="keypad" class="keypad"></div><p id="gate-status" class="tiny" aria-live="polite">这是一扇仪式感的小门 ♡</p></dialog>
+<dialog id="lightbox" aria-label="回忆照片大图"><button id="close-lightbox" class="close" aria-label="关闭大图">×</button><img id="large-photo" alt=""><p id="large-caption"></p><div class="light-controls"><button id="large-prev" aria-label="查看上一张大图">←</button><span id="large-count"></span><button id="large-next" aria-label="查看下一张大图">→</button></div></dialog>
+<dialog id="redpacket" aria-labelledby="redpacket-title"><button id="close-redpacket" class="close" aria-label="关闭红包">×</button><span class="redpacket-heart" aria-hidden="true">♡</span><p class="eyebrow">A LITTLE GIFT, ALL MY LOVE</p><h2 id="redpacket-title">专属宠爱金</h2><p>天大地大，老婆最大。</p><img id="redpacket-qr" alt="专属宠爱金刮刮乐网页二维码" hidden><p id="redpacket-state" role="status">扫码打开专属刮刮乐。</p><div class="gift-actions"><a href="scratch.html">直接打开刮刮乐 ♡</a><a href="assets/gift/scratch-qr.png" download="专属宠爱金二维码.png">保存二维码 ↓</a></div><p id="scratch-local-note" class="tiny" hidden>本地预览：可直接打开刮刮乐；手机扫码需发布新版后使用。</p></dialog>
+<div class="music-widget"><button id="music-toggle" aria-pressed="false">♪ 播放音乐</button><span id="music-status" role="status"></span></div><audio id="birthday-music" autoplay loop preload="auto"></audio>
+<noscript><p class="nojs">王馨渝，生日快乐。请开启 JavaScript，查看全部 36 张照片与互动生日卡。</p></noscript><script src="content.js?v=20261023-scratch"></script><script src="main.js?v=20261023-scratch"></script><script src="music.js?v=20261023-scratch"></script></body></html>
