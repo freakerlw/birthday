@@ -53,6 +53,7 @@
 | `styles.css` | 全部样式与动效，设计 token 收在 `:root` |
 | `main.js` | 把 `window.CONTENT` 渲染成 DOM，胶片带交互、入场动效 |
 | `content.js` | 全站唯一的内容来源（文案、照片路径、分组） |
+| `webgl-bg.js` | 手写 WebGL 背景层：fBm 星云 + 金尘，WebGL 不可用时静默移除 |
 | `assets/photos/` | 36 张照片，勿改名、勿重压、勿删除 |
 
 ## 兼容与可访问性
