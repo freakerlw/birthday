@@ -60,6 +60,15 @@
     line.appendChild(lineInner);
     hero.appendChild(line);
 
+    /* C1 名字金色流光：开场后 300ms 一次 */
+    var shined = false;
+    function shine() {
+      if (shined) return;
+      shined = true;
+      name.classList.add("name-shimmer");
+      window.setTimeout(function () { name.classList.remove("name-shimmer"); }, 1200);
+    }
+
     var timer = 0;
     function end() {
       if (!root.classList.contains(OPENING)) return;
@@ -70,6 +79,7 @@
       window.removeEventListener("keydown", end, true);
       window.removeEventListener("wheel", end, true);
       window.removeEventListener("touchstart", end, true);
+      window.setTimeout(shine, 300);
     }
 
     window.addEventListener("click", end, { capture: true, passive: true });
@@ -143,6 +153,64 @@
     document.body.appendChild(spot);
   }
 
+  /* C2 遮罩揭示：整条带首次接近视口时，各张按 --d 错峰揭开一次 */
+  var clipFilms = toArray(document.querySelectorAll(".film"));
+  if (clipFilms.length && window.IntersectionObserver) {
+    var clipIO = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        clipIO.unobserve(e.target);
+        toArray(e.target.children).forEach(function (it) { it.classList.add("clip-in"); });
+      });
+    }, { rootMargin: "0px 0px 400px 0px" });
+    clipFilms.forEach(function (f) { f.classList.add("clip-wait"); clipIO.observe(f); });
+  }
+
+  /* C3 拖动惯性：lerp(0.14) 减速，触屏不接管 */
+  var glide = null;
+  function stopGlide() {
+    if (glide) glide.film.classList.remove("is-gliding");
+    glide = null;
+  }
+  function startGlide(film, v) {
+    if (Math.abs(v) < 0.25) return;
+    stopGlide();
+    film.classList.add("is-gliding", "is-free"); /* 拖过之后保持自由滚动，避免吸附把滑行拽回 */
+    glide = { film: film, pos: film.scrollLeft, v: v * 16.7, start: performance.now() };
+    needFrame();
+  }
+  if (fine) films.forEach(function (film) {
+    var tr = null;
+    film.addEventListener("pointerdown", function (e) {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      if (glide && glide.film === film) stopGlide();
+      tr = { x: e.clientX, t: performance.now(), v: 0 };
+    }, { passive: true });
+    film.addEventListener("pointermove", function (e) {
+      if (!tr) return;
+      var t = performance.now(), dt = t - tr.t;
+      if (dt > 0) { tr.v = tr.v * 0.6 + (e.clientX - tr.x) / dt * 0.4; tr.x = e.clientX; tr.t = t; }
+    }, { passive: true });
+    function fin() {
+      if (!tr) return;
+      var v = performance.now() - tr.t > 120 ? 0 : tr.v;
+      tr = null;
+      startGlide(film, -v);
+    }
+    film.addEventListener("pointerup", fin);
+    film.addEventListener("pointercancel", fin);
+  });
+
+  /* C4 hero 聚光灯（仅 pointer:fine） */
+  var heroEl = document.getElementById("hero");
+  var heroSpot = null, heroOn = false, hxo = 0, hyo = 0, heroDirty = false;
+  if (fine && heroEl) {
+    heroSpot = document.createElement("div");
+    heroSpot.className = "hero-spot";
+    heroSpot.setAttribute("aria-hidden", "true");
+    heroEl.appendChild(heroSpot);
+  }
+
   /* ---------- 单帧循环 ---------- */
   var queued = false;
   var scrollDirty = true;
@@ -194,6 +262,7 @@
           if (film.__focus) film.__focus.classList.remove("is-focus");
           if (best) best.classList.add("is-focus");
           film.__focus = best;
+          if (window.__filmCaption) window.__filmCaption(film, best);
         }
       }
 
@@ -233,6 +302,20 @@
       hoverItem.style.setProperty("--rx", (-ny * 6).toFixed(2) + "deg");
     }
 
+    /* C3 惯性滑行 */
+    if (glide) {
+      glide.film.scrollLeft = glide.pos += glide.v;
+      glide.v += -glide.v * 0.14;
+      if (Math.abs(glide.v) < 0.25 || performance.now() - glide.start > 600) stopGlide();
+      else again = true;
+    }
+
+    /* C4 聚光灯跟随（hero 内坐标 → translate3d） */
+    if (heroDirty) {
+      heroDirty = false;
+      heroSpot.style.transform = "translate3d(" + (hxo - 520).toFixed(1) + "px," + (hyo - 520).toFixed(1) + "px,0)";
+    }
+
     if (again) needFrame();
   }
 
@@ -256,6 +339,19 @@
         }
         px = event.clientX;
         py = event.clientY;
+      }
+
+      if (heroSpot) {
+        var hb = heroEl.getBoundingClientRect();
+        if (event.clientX > hb.left && event.clientX < hb.right && event.clientY > hb.top && event.clientY < hb.bottom) {
+          hxo = event.clientX - hb.left;
+          hyo = event.clientY - hb.top;
+          heroDirty = true;
+          if (!heroOn) { heroOn = true; heroSpot.classList.add("is-on"); }
+        } else if (heroOn) {
+          heroOn = false;
+          heroSpot.classList.remove("is-on");
+        }
       }
 
       var target = event.target;

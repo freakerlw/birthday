@@ -110,6 +110,7 @@
       if (!photo || !photo.src) return;
       var figure = el("figure", "film-item");
       if (photo.ratio) figure.style.setProperty("--ratio", photo.ratio);
+      if (photo.caption) figure.setAttribute("data-caption", photo.caption);
 
       var img = document.createElement("img");
       img.src = photo.src;
@@ -122,6 +123,49 @@
     });
 
     return film;
+  }
+
+  /* 图注行：只在该带至少一张照片有 caption 时创建，不占空位。
+     aria-live 让切换被读屏播报；文案本身是地点 / 时刻短语，与图片 alt 的画面描述不重复。 */
+  function buildCaption(film) {
+    var items = film.children;
+    var first = "";
+    for (var i = 0; i < items.length; i++) {
+      var text = items[i].getAttribute("data-caption");
+      if (text) { first = text; break; }
+    }
+    if (!first) return null;
+
+    var cap = el("p", "film-caption");
+    cap.setAttribute("aria-live", "polite");
+    cap.setAttribute("aria-atomic", "true");
+    var span = el("span", "film-caption-text", first);
+    cap.appendChild(span);
+    film.__cap = cap;
+    film.__capText = span;
+    span.__shown = first;
+    return cap;
+  }
+
+  /* 200ms 淡出 + 淡入；折减动效时直接换字 */
+  function showCaption(film, text) {
+    var span = film.__capText;
+    if (!span || span.__shown === text) return;
+    span.__shown = text;
+    film.__cap.hidden = !text; /* 空 caption 不留空行 */
+    if (reduceMotion) {
+      span.textContent = text;
+      span.style.opacity = "1";
+      return;
+    }
+    window.clearTimeout(film.__capTimer);
+    span.style.transition = "opacity 80ms linear";
+    span.style.opacity = "0";
+    film.__capTimer = window.setTimeout(function () {
+      span.textContent = text;
+      span.style.transition = "opacity 120ms linear";
+      span.style.opacity = "1";
+    }, 80);
   }
 
   (function buildGallery() {
@@ -141,11 +185,78 @@
       head.appendChild(count);
       block.appendChild(head);
 
-      block.appendChild(buildFilm(group, groupIndex));
+      var film = buildFilm(group, groupIndex);
+      block.appendChild(film);
+      var caption = buildCaption(film);
+      if (caption) block.appendChild(caption);
       nodes.push(reveal(block));
     });
 
     mount("gallery", nodes);
+  })();
+
+  /* ---------- 2b. 图注跟随：中心最近的那张（与 anim.js 的 .is-focus 判定同一套规则） ---------- */
+  (function setupCaptions() {
+    var films = Array.prototype.slice.call(document.querySelectorAll(".film"));
+    if (!films.length) return;
+
+    function nearest(film) {
+      var items = film.children;
+      if (!items.length) return null;
+      var fr = film.getBoundingClientRect();
+      var cx = fr.left + fr.width / 2;
+      var best = null;
+      var bestD = Infinity;
+      for (var i = 0; i < items.length; i++) {
+        var ir = items[i].getBoundingClientRect();
+        var d = Math.abs(ir.left + ir.width / 2 - cx);
+        if (d < bestD) { bestD = d; best = items[i]; }
+      }
+      return best;
+    }
+
+    function update(film, item) {
+      if (!film.__capText) return;
+      showCaption(film, item ? item.getAttribute("data-caption") || "" : "");
+    }
+
+    /* anim.js 每次重算 .is-focus 后回调这里，不重复做几何计算 */
+    window.__filmCaption = update;
+
+    function refresh() {
+      for (var i = 0; i < films.length; i++) {
+        var film = films[i];
+        if (!film.__capText) continue;
+        update(film, film.querySelector(".film-item.is-focus") || nearest(film));
+      }
+    }
+
+    /* 正常动效下，anim.js 每次重算 .is-focus 就回调 __filmCaption，图注与焦点同一帧到位；
+       这里只在折减动效 / anim.js 缺席时接管，避免两处各算一遍几何。 */
+    function attachFallback() {
+      var queued = false;
+      function request() {
+        if (queued) return;
+        queued = true;
+        window.__frame(function () { queued = false; refresh(); });
+      }
+      films.forEach(function (film) {
+        if (film.__capText) film.addEventListener("scroll", request, { passive: true });
+      });
+      window.addEventListener("scroll", request, { passive: true });
+      window.addEventListener("resize", request);
+      window.addEventListener("load", request);
+      request();
+      window.setTimeout(request, 300);
+    }
+
+    if (reduceMotion) {
+      attachFallback();
+    } else {
+      window.setTimeout(function () {
+        if (!document.querySelector(".film-item.is-focus")) attachFallback();
+      }, 500);
+    }
   })();
 
   /* ---------- 胶片带的交互：键盘 + 桌面鼠标拖动 ---------- */

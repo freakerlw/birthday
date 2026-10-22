@@ -199,12 +199,29 @@ ul, ol { padding: 0; list-style: none; }
   color: var(--gold);
 }
 
+/* 约 110 字的长标语：桌面 620px 版心、17–18px、1.9 行高，居中；
+ * 375 端单独收紧字号与左右留白（见文件末尾的窄屏块） */
 .hero-tagline {
-  max-width: 32em;
+  max-width: 620px;
   font-family: var(--sans);
-  font-size: clamp(17px, 2.2vw, 19px);
-  line-height: 1.95;
+  font-size: clamp(17px, 1.25vw, 18px);
+  line-height: 1.9;
   color: var(--text-muted);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* 窄屏：左右各留 24px，字号 15px / 行高 1.85 */
+@media (max-width: 600px) {
+  .section--hero {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .hero-tagline {
+    max-width: 100%;
+    font-size: 15px;
+    line-height: 1.85;
+  }
 }
 
 /* ---------- 2. gallery：胶片横滑带 ---------- */
@@ -285,7 +302,8 @@ ul, ol { padding: 0; list-style: none; }
   /* 焦点缩放与 3D 倾斜合成在同一条 transform 上，互不覆盖 */
   transform: scale(var(--zoom, 1)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transition: transform 500ms var(--ease), filter 500ms var(--ease),
-    outline-color 500ms var(--ease), opacity 500ms var(--ease);
+    outline-color 500ms var(--ease), opacity 500ms var(--ease),
+    clip-path 700ms var(--ease) calc(var(--d, 0) * 50ms);
 }
 .film-item.is-focus {
   --zoom: 1.06;
@@ -298,6 +316,27 @@ ul, ol { padding: 0; list-style: none; }
   object-fit: cover;
   -webkit-user-drag: none;
   user-select: none;
+}
+
+/* 胶片带下方的图注：单行、居中、超长省略；无 caption 时整行不渲染 */
+.film-caption {
+  margin: 8px auto 0;
+  max-width: 100%;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.film-caption-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- 3. timeline ---------- */
@@ -665,8 +704,21 @@ ul, ol { padding: 0; list-style: none; }
   opacity: 1;
   transform: translateX(0);
   transition: opacity 640ms var(--ease) calc(var(--d, 0) * 60ms),
-    transform 640ms var(--ease) calc(var(--d, 0) * 60ms);
+    transform 640ms var(--ease) calc(var(--d, 0) * 60ms),
+    clip-path 700ms var(--ease) calc(var(--d, 0) * 50ms);
 }
+
+/* ---------- C2 照片遮罩揭示：整条带接近视口时，各张从左 / 下侧错峰 50ms 揭开 ----------
+ * 初始隐藏态挂在 anim.js 加的 .clip-wait 上：无 JS / 无 IO / 折减动效时图片始终完整可见。 */
+@media (prefers-reduced-motion: no-preference) {
+  .js .clip-wait .film-item:nth-child(odd) { clip-path: inset(0 100% 0 0); }
+  .js .clip-wait .film-item:nth-child(even) { clip-path: inset(0 0 100% 0); }
+  .js .clip-wait .film-item.clip-in { clip-path: inset(0); }
+}
+
+/* C3 惯性滑行期间关掉吸附；鼠标拖过之后保持自由滚动，避免吸附把滑行拽回去 */
+.film.is-gliding,
+.film.is-free { scroll-snap-type: none; }
 
 /* ---------- ⑤ 桌面鼠标光斑 ---------- */
 .spotlight {
@@ -689,6 +741,48 @@ ul, ol { padding: 0; list-style: none; }
   will-change: transform;
 }
 
+/* ---------- C1 名字金色流光（开场结束后一次，1.1s） ---------- */
+.hero-name.name-shimmer {
+  background-image: linear-gradient(100deg,
+    var(--text) 0%, var(--text) 38%, var(--gold) 50%, var(--text) 62%, var(--text) 100%);
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  background-position: 0% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: name-shimmer 1.1s cubic-bezier(.33, 0, .2, 1) both;
+}
+@keyframes name-shimmer {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
+/* ---------- C4 hero 鼠标聚光灯：只在 hero 内，文字块在其上层（z-index 1） ---------- */
+.hero-spot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1040px;
+  height: 1040px;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background: radial-gradient(circle 520px at 50% 50%,
+    rgba(255, 246, 228, 0.10) 0%, rgba(255, 246, 228, 0) 70%);
+  mix-blend-mode: soft-light;
+  transition: opacity 260ms var(--ease), visibility 0s linear 260ms;
+  will-change: transform;
+}
+.hero-spot.is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 260ms var(--ease);
+}
+
 /* ---------- 动效折减 ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -707,5 +801,7 @@ ul, ol { padding: 0; list-style: none; }
   /* 折减：无开场 / 无入场 / 无光斑 / 无倾斜，但文案与焦点环照常可见 */
   .hero-descend-line { animation: none; }
   .timeline::after { transform: none; }
-  .film-item { transform: none; filter: none; }
+  .film-item { transform: none; filter: none; clip-path: none !important; }
+  .hero-name.name-shimmer { animation: none; background: none; color: var(--text); -webkit-text-fill-color: currentColor; }
+  .hero-spot { display: none; }
 }
