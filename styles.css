@@ -32,3 +32,24 @@
 #redpacket-qr{width:340px;padding:0;border-radius:8px}.gift-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;font-size:12px;margin-top:15px}.gift-actions a{text-decoration:underline;text-underline-offset:4px}.music-widget{position:fixed;bottom:18px;left:18px;z-index:10;max-width:230px}.music-widget button{padding:12px 17px;border:1px solid #bfd4e5;border-radius:28px;background:#f5faffed;box-shadow:0 4px 20px #31527120;color:#3c6c96;font-size:12px;backdrop-filter:blur(10px)}#music-status:not(:empty){display:block;background:#fff;padding:8px;font-size:11px;border-radius:8px;margin-top:6px}.music-widget button[aria-pressed=true]{background:#dfedf8}
 
 .music-credit{text-align:center;padding:0 25px 75px;font-size:10px;line-height:1.8;color:#617b91}.music-credit a{text-decoration:underline}#redpacket-qr{width:280px;border-radius:0;padding:0}
+
+/* Touch layouts and iPhone safe areas, including Safari's dynamic toolbar. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+header{padding-top:calc(22px + env(safe-area-inset-top));padding-left:max(5%,env(safe-area-inset-left));padding-right:max(5%,env(safe-area-inset-right))}
+.music-widget{bottom:calc(14px + env(safe-area-inset-bottom));left:calc(14px + env(safe-area-inset-left));max-width:calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right))}
+.music-credit{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+dialog{max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+@media(max-width:700px){
+ header{gap:12px}.quiet{min-height:44px}.wordmark{white-space:nowrap}
+ .section{padding:64px 20px}.hero{min-height:0;padding:46px 20px 325px}.hero .intro{font-size:15px;line-height:1.95}.hero .tiny{font-size:12px;letter-spacing:0}.hero-bottom{gap:12px;line-height:1.6}
+ .section h2{font-size:clamp(23px,6.2vw,28px);text-wrap:balance}.sub{font-size:14px}
+ .gallery-controls{flex-wrap:wrap;justify-content:center}.gallery-controls>p{flex-basis:100%;margin:0;text-align:center}.gallery-controls button,.light-controls button,.close{width:44px;height:44px;min-width:44px}.chapters button{min-height:44px}
+ .letter{padding:26px 22px;transform:none}.letter p{font-size:17px;line-height:2.05}.signature{font-size:16px;line-height:1.8}.timeline{gap:24px 18px}.milestone p{font-size:13px}
+ .wish-grid{grid-template-columns:1fr;gap:18px;max-width:430px;margin-left:auto;margin-right:auto}.wish-card{min-height:185px}.wish-card[aria-expanded=true]{padding:38px 12px 14px}.wish-image-label,.wish-card:nth-child(5) .wish-image-label{font-size:12px;padding:3px 7px}.wish-detail{font-size:16px}
+ .primary,.gift-actions a,.music-widget button{min-height:44px}.gift-actions a{display:inline-flex;align-items:center;justify-content:center;padding:8px}.gift-actions{gap:4px 16px}
+ #gate{width:350px;padding:38px 22px 18px}#gate .birthday-sticker{margin-bottom:18px}#gate h2{margin:12px 0}#gate .sub{margin:12px 0}.keypad{gap:10px}.keypad button{height:48px}.dots{padding:8px}.hint{font-size:12px}
+ #lightbox{padding:60px 12px 20px;max-width:calc(100% - 20px)}#large-photo{max-width:calc(100vw - 48px);max-height:calc(100dvh - 220px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}#large-caption{line-height:1.6}
+ #redpacket{padding:48px 20px 24px}#redpacket h2{font-size:26px}.ending{padding-bottom:70px}
+}
+@media(max-width:374px){.wordmark{font-size:14px}.hero h1{font-size:49px}.script{font-size:28px}.letter{padding:22px 18px}.wish-image-label{font-size:10px}}
+@media(max-height:600px) and (orientation:landscape){dialog{max-height:calc(100dvh - 20px)}#gate{padding:30px 22px 16px}#gate .birthday-sticker{font-size:20px;margin:0 0 10px}.keypad button{height:44px}#gate h2{font-size:23px}}
